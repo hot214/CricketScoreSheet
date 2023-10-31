@@ -8,13 +8,16 @@ class ScoreSheetScreen extends StatefulWidget {
 }
 
 const TextStyle titleStyle =
-    TextStyle(fontSize: 20, fontWeight: FontWeight.bold);
+    TextStyle(fontSize: 14, fontWeight: FontWeight.bold);
 
 const TextStyle valueStyle =
-    TextStyle(fontSize: 36, fontWeight: FontWeight.bold);
+    TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
 
 const TextStyle infoStyle =
-    TextStyle(fontSize: 18, fontWeight: FontWeight.normal);
+    TextStyle(fontSize: 12, fontWeight: FontWeight.normal);
+
+const TextStyle smallStyle =
+    TextStyle(fontSize: 8, fontWeight: FontWeight.normal);
 
 class _MyHomePageState extends State<ScoreSheetScreen> {
   // Define variables to store the state of the checkboxes and input fields.
@@ -65,7 +68,7 @@ class _MyHomePageState extends State<ScoreSheetScreen> {
     // calculate score
     var reward = (isWideChecked ? 1 : 0) + (isNoBallChecked ? 1 : 0);
     var penalty = (isOut ? outPenalty : 0);
-    var isValidDelivery = (!isWideChecked && !isNoBallChecked && !isOut);
+    var isValidDelivery = (!isWideChecked && !isNoBallChecked);
 
     setState(() {
       players[selectedPlayer].rValue += reward + score - penalty;
@@ -106,7 +109,7 @@ class _MyHomePageState extends State<ScoreSheetScreen> {
     var reward = (last.isWideChecked ? 1 : 0) + (last.isNoBallChecked ? 1 : 0);
     var penalty = (last.isOut ? last.penalty : 0);
     var isValidDelivery =
-        (!last.isWideChecked && !last.isNoBallChecked && !last.isOut);
+        (!last.isWideChecked && !last.isNoBallChecked);
 
     setState(() {
       players[last.selectedPlayer].rValue -= reward + score - penalty;
@@ -222,255 +225,266 @@ class _MyHomePageState extends State<ScoreSheetScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 32),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  // Team Score
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Team Score',
-                        style: titleStyle,
-                      ),
-                      Text(
-                        '$teamScore',
-                        style: valueStyle,
-                      )
-                    ],
-                  ),
-                  // Over
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Over',
-                        style: titleStyle,
-                      ),
-                      Text(
-                        '$over',
-                        style: valueStyle,
-                      ), // Add your over value here
-                    ],
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-              // List of Players
-              for (int index = 0; index < players.length; index++)
-                Container(
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Color.fromARGB(100, 100, 100, 100),
-                        width: 1.0,
-                      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                // Team Score
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Team Score',
+                      style: titleStyle,
                     ),
-                  ),
-                  child: ListTile(
-                    title: GestureDetector(
-                        onTap: () {
-                          _editPlayerName(players[index]);
-                        },
-                        child: Text(players[index].name)),
-                    subtitle: index == selectedPlayer
-                        ? GestureDetector(
+                    Text(
+                      '$teamScore',
+                      style: valueStyle,
+                    )
+                  ],
+                ),
+                // Over
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Over',
+                      style: titleStyle,
+                    ),
+                    Text(
+                      '$over',
+                      style: valueStyle,
+                    ), // Add your over value here
+                  ],
+                ),
+              ],
+            ),
+            
+            // List of Players
+            const SizedBox(height: 8),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    for (int index = 0; index < players.length; index++)
+                    Container(
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: Color.fromARGB(100, 100, 100, 100),
+                            width: 1.0,
+                          ),
+                        ),
+                      ),
+                      child: ListTile(
+                        title: GestureDetector(
                             onTap: () {
                               _editPlayerName(players[index]);
                             },
-                            child: const Text('Striker'))
-                        : null,
-                    leading: Radio(
-                      value: index,
-                      groupValue: selectedPlayer,
-                      onChanged: (value) {
-                        setState(() {
-                          selectedPlayer = value ?? 0;
-                        });
-                      },
-                    ),
-                    trailing: GestureDetector(
+                            child: Text(
+                              players[index].name,
+                              style: infoStyle
+                              )  
+                            ),
+                        subtitle: index == selectedPlayer
+                            ? GestureDetector(
+                                onTap: () {
+                                  _editPlayerName(players[index]);
+                                },
+                                child: const Text('Striker', style: smallStyle))
+                            : null,
+                        leading: Radio(
+                          value: index,
+                          groupValue: selectedPlayer,
+                          onChanged: (value) {
+                            setState(() {
+                              selectedPlayer = value ?? 0;
+                            });
+                          },
+                        ),
+                        trailing: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                selectedPlayer = index;
+                              });
+                            },
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'R: ${players[index].rValue}',
+                                  style: infoStyle,
+                                ),
+                                const SizedBox(width: 32),
+                                Text(
+                                  'B: ${players[index].bValue}',
+                                  style: infoStyle
+                                ),
+                              ],
+                            )),
                         onTap: () {
                           setState(() {
                             selectedPlayer = index;
                           });
                         },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'R: ${players[index].rValue}',
-                              style: infoStyle,
-                            ),
-                            const SizedBox(width: 32),
-                            Text(
-                              'B: ${players[index].bValue}',
-                              style: infoStyle,
-                            ),
-                          ],
-                        )),
-                    onTap: () {
-                      setState(() {
-                        selectedPlayer = index;
-                      });
-                    },
-                  ),
-                ),
-              const SizedBox(height: 16),
-              // Wide, No ball, Score, Out
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Flexible(
-                      flex: 1,
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: isWideChecked,
-                            onChanged: (value) {
-                              setState(() {
-                                isWideChecked = value ?? false;
-                                isNoBallChecked =
-                                    isNoBallChecked && !isWideChecked;
-                              });
-                            },
-                          ),
-                          const Text('Wide')
-                        ],
-                      )),
-                  Flexible(
-                      flex: 1,
-                      child: Row(children: [
+                      ),
+                    ),
+                  ]
+                )
+              )
+            ),
+
+            // Wide, No ball, Score, Out
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                    flex: 1,
+                    child: Row(
+                      children: [
                         Checkbox(
-                          value: isNoBallChecked,
+                          value: isWideChecked,
                           onChanged: (value) {
                             setState(() {
-                              isNoBallChecked = value ?? false;
-                              isWideChecked = isWideChecked && !isNoBallChecked;
+                              isWideChecked = value ?? false;
+                              isNoBallChecked =
+                                  isNoBallChecked && !isWideChecked;
                             });
                           },
                         ),
-                        const Text('No ball')
-                      ])),
-                  Flexible(
-                      flex: 1,
-                      child: Row(
-                        children: [
-                          Checkbox(
-                            value: isOut,
-                            onChanged: (value) {
-                              setState(() {
-                                isOut = value ?? false;
-                              });
-                            },
-                          ),
-                          const Text('Out')
-                        ],
-                      )),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const Checkbox(
-                    value: true,
-                    onChanged: null,
-                  ),
-                  Flexible(
-                      flex: 1,
-                      child: TextFormField(
-                        controller: _scoreController,
-                        decoration: const InputDecoration(labelText: 'Score'),
-                        keyboardType: TextInputType.number,
+                        const Text('Wide', style: infoStyle,)
+                      ],
+                    )),
+                Flexible(
+                    flex: 1,
+                    child: Row(children: [
+                      Checkbox(
+                        value: isNoBallChecked,
                         onChanged: (value) {
                           setState(() {
-                            score = int.tryParse(value) ?? 0;
+                            isNoBallChecked = value ?? false;
+                            isWideChecked = isWideChecked && !isNoBallChecked;
                           });
                         },
-                      )),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Add, Undo, Reset buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                      child: ElevatedButton(
-                    onPressed: () {
-                      _add();
-                    },
-                    child: Text('Add'),
-                  )),
-                  const SizedBox(width: 32),
-                  Expanded(
-                      child: ElevatedButton(
-                    onPressed: history.isEmpty
-                        ? null
-                        : () {
-                            _undo();
+                      ),
+                      const Text('No ball', style: infoStyle,)
+                    ])),
+                Flexible(
+                    flex: 1,
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: isOut,
+                          onChanged: (value) {
+                            setState(() {
+                              isOut = value ?? false;
+                            });
                           },
-                    child: Text('Undo'),
-                  )),
-                  const SizedBox(width: 32),
-                  Expanded(
-                      child: ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        resetFlag = 0;
-                      });
-                      _reset();
-                    },
-                    child: const Text('Reset'),
-                  )),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Out Penalty Input
-              Row(
-                children: [
-                  Expanded(
-                    child: !isOutPenaltyConfirmed
-                        ? TextFormField(
-                            controller: _penaltyController,
-                            decoration:
-                                const InputDecoration(labelText: 'Out Penalty'),
-                            keyboardType: TextInputType.number,
-                            onChanged: (value) {
-                              setState(() {
-                                outPenalty = int.tryParse(value) ?? 0;
-                              });
-                            },
-                          )
-                        : Text(
-                            'Out Penalty: $outPenalty',
-                            style: infoStyle,
-                          ),
-                  ),
-                  const SizedBox(
-                    width: 16,
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Add your logic for the "Submit" button here
-                      setState(() {
-                        isOutPenaltyConfirmed = true;
-                      });
-                    },
-                    child: const Text('Submit'),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                        ),
+                        const Text('Out', style: infoStyle,)
+                      ],
+                    )),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const Checkbox(
+                  value: true,
+                  onChanged: null,
+                ),
+                Flexible(
+                    flex: 1,
+                    child: TextFormField(
+                      controller: _scoreController,
+                      style: infoStyle,
+                      decoration: const InputDecoration(labelText: 'Score'),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        setState(() {
+                          score = int.tryParse(value) ?? 0;
+                        });
+                      },
+                    )),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Add, Undo, Reset buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                    child: ElevatedButton(
+                  onPressed: () {
+                    _add();
+                  },
+                  child: Text('Add'),
+                )),
+                const SizedBox(width: 32),
+                Expanded(
+                    child: ElevatedButton(
+                  onPressed: history.isEmpty
+                      ? null
+                      : () {
+                          _undo();
+                        },
+                  child: Text('Undo'),
+                )),
+                const SizedBox(width: 32),
+                Expanded(
+                    child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      resetFlag = 0;
+                    });
+                    _reset();
+                  },
+                  child: const Text('Reset'),
+                )),
+              ],
+            ),
+            // Out Penalty Input
+            Row(
+              children: [
+                Expanded(
+                  child: !isOutPenaltyConfirmed
+                      ? TextFormField(
+                          controller: _penaltyController,
+                          style: infoStyle,
+                          decoration:
+                              const InputDecoration(labelText: 'Out Penalty'),
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            setState(() {
+                              outPenalty = int.tryParse(value) ?? 0;
+                            });
+                          },
+                        )
+                      : Text(
+                          'Out Penalty: $outPenalty',
+                          style: infoStyle,
+                        ),
+                ),
+                const SizedBox(
+                  width: 16,
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    // Add your logic for the "Submit" button here
+                    setState(() {
+                      isOutPenaltyConfirmed = true;
+                    });
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
