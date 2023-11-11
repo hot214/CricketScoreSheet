@@ -1,8 +1,13 @@
-import 'package:cricket_app/screens/scoresheet_screen.dart';
+import 'package:cricket_app/models/game_model.dart';
+import 'package:cricket_app/screens/main_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(ChangeNotifierProvider(
+    create: (context) => GameModel(),
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -17,7 +22,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: const ScoreSheetScreen(),
+      home: const MainScreen(),
     );
   }
 }
