@@ -8,6 +8,7 @@ class Stack<E> {
 
   E? pop() => (isEmpty) ? null : _list.removeLast();
   E? get top => (isEmpty) ? null : _list.last;
+  List<E> get list => _list;
 
   void clear() => _list.clear();
 

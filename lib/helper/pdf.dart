@@ -6,7 +6,6 @@ import 'package:cricket_app/models/team_model.dart';
 // import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:provider/provider.dart';
 
 // import 'package:filesystem_picker/filesystem_picker.dart';
 String getCurrentDate() {
@@ -14,7 +13,8 @@ String getCurrentDate() {
   return "${now.month}/${now.day}/${now.year}";
 }
 
-pw.Page SummaryPage(String subTitle, List<pw.Widget> content) {
+pw.Page SummaryPage(
+    String headerInfo, String subTitle, List<pw.Widget> content) {
   return pw.Page(
     pageFormat: PdfPageFormat.a4.copyWith(
         marginLeft: 20, marginRight: 20, marginTop: 20, marginBottom: 20),
@@ -26,16 +26,21 @@ pw.Page SummaryPage(String subTitle, List<pw.Widget> content) {
           children: [
             pw.Header(
               level: 0,
-              child: pw.Text('Cricket Game - ${getCurrentDate()}'),
+              child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  mainAxisAlignment: pw.MainAxisAlignment.start,
+                  children: [
+                    pw.Text("Cricket App",
+                        style: const pw.TextStyle(fontSize: 24)),
+                    pw.Text(headerInfo)
+                  ]),
             ),
             pw.Text(subTitle, textAlign: pw.TextAlign.right),
             pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.center,
               children: content.slice(0, 2),
             ),
             content.length > 2
                 ? pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.center,
                     children: content.slice(2),
                   )
                 : pw.SizedBox.shrink()
@@ -46,20 +51,23 @@ pw.Page SummaryPage(String subTitle, List<pw.Widget> content) {
   );
 }
 
-Future<Uint8List> pdfGenerate(context) async {
+Future<Uint8List> pdfGenerate(GameModel model) async {
   final pdf = pw.Document();
-  GameModel model = Provider.of<GameModel>(context, listen: false);
 
   final pw.Widget team1Bat = buildSection(model.team1.getSummary());
-  final pw.Widget team1Bow = buildSection(model.team1.getSummary(type: 'bow'));
+  final pw.Widget team1Bow =
+      buildSection(model.team1.getSummary(type: 'Bowling'));
   final pw.Widget team2Bat = buildSection(model.team2.getSummary());
-  final pw.Widget team2Bow = buildSection(model.team2.getSummary(type: 'bow'));
+  final pw.Widget team2Bow =
+      buildSection(model.team2.getSummary(type: 'Bowling'));
   if (model.team1.playerList.length > 12) {
-    pdf.addPage(SummaryPage(model.gameResult, [team1Bat, team1Bow]));
-    pdf.addPage(SummaryPage(model.gameResult, [team2Bat, team2Bow]));
+    pdf.addPage(
+        SummaryPage(model.gameSummary, model.gameResult, [team1Bat, team2Bow]));
+    pdf.addPage(
+        SummaryPage(model.gameSummary, model.gameResult, [team2Bat, team1Bow]));
   } else {
-    pdf.addPage(SummaryPage(model.gameResult,
-        [team1Bat, team1Bow, pw.SizedBox(height: 20), team2Bat, team2Bow]));
+    pdf.addPage(SummaryPage(model.gameSummary, model.gameResult,
+        [team1Bat, team2Bow, pw.SizedBox(height: 20), team2Bat, team1Bow]));
   }
 
   return pdf.save();
@@ -97,13 +105,24 @@ pw.Widget buildSection(TeamSummary summary) {
       children: [
         pw.Header(
           level: 2,
-          child: pw.Text("${summary.name}'s ${summary.type}",
-              textAlign: pw.TextAlign.center),
+          child: pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.start,
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text("${summary.name} ${summary.type} stats"),
+                pw.Text(summary.type == "Batting"
+                    ? "Runs: ${summary.run} Balls: ${summary.ball} Overs: ${summary.overs}"
+                    : "Balls: ${summary.ball}"),
+              ]),
         ),
         pw.TableHelper.fromTextArray(
             headers: summary.header,
             cellAlignment: pw.Alignment.center,
             data: summary.data),
+        pw.Padding(padding: const pw.EdgeInsets.only(top: 5)),
+        pw.Text(summary.type == "Batting"
+            ? "Total: ${summary.run} runs in ${summary.overs} stats"
+            : "Total: ${summary.ball} balls"),
       ],
     ),
   );

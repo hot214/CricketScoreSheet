@@ -82,13 +82,15 @@ class _MyHomePageState extends State<BowlerScreen> {
                     contentPadding: const EdgeInsets.all(0),
                     visualDensity: const VisualDensity(vertical: -4),
                     title: GestureDetector(
-                        onTap: () {
-                          _editPlayerName(bowlerList[index].name,
-                              onSave: (String name) {
-                            bowlerList[index].name = name;
-                            model.bowTeam.setPlayer(bowlerList);
-                          });
-                        },
+                        onTap: !model.isGameStarted
+                            ? () {
+                                _editPlayerName(bowlerList[index].name,
+                                    onSave: (String name) {
+                                  bowlerList[index].name = name;
+                                  model.bowTeam.setPlayer(bowlerList);
+                                });
+                              }
+                            : null,
                         child: currentBowler == bowlerList[index]
                             ? Text(bowlerList[index].name, style: boldInfoStyle)
                             : Text(bowlerList[index].name, style: infoStyle)),

@@ -1,4 +1,6 @@
 import 'package:cricket_app/models/game_model.dart';
+import 'package:cricket_app/screens/archives_screen.dart';
+import 'package:cricket_app/screens/ballbyball_screen.dart';
 import 'package:cricket_app/screens/battle_screen.dart';
 import 'package:cricket_app/screens/bowler_screen.dart';
 import 'package:cricket_app/screens/summary_screen.dart';
@@ -46,12 +48,30 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     }
   }
 
+  void startGame() {
+    GameModel model = Provider.of<GameModel>(context, listen: false);
+    model.startGame();
+  }
+
   void goToSummary() async {
-    final result = await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const SummaryScreen()));
+    final result = await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => SummaryScreen()));
     if (result == 'reset') {
       batController.reset!();
     }
+  }
+
+  void gotoBallbyball() async {
+    final result = await Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const BallByBallScreen()));
+    if (result == 'reset') {
+      batController.reset!();
+    }
+  }
+
+  void gotoArchive() {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const ArchiveScreen()));
   }
 
   @override
@@ -61,10 +81,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         body: SafeArea(
             child: Column(children: [
       CricketHeaderWidget(
-          "${model.inning}st Innings",
+          model.inning == 1 ? "1st Innings" : "2nd Innings",
           _selectedIndex == 0 ? model.batTeam.name : model.bowTeam.name,
           _selectedIndex,
-          onChanged: (String name) => changeCurrentTeamName(name)),
+          onChanged: !model.isGameStarted
+              ? (String name) => changeCurrentTeamName(name)
+              : null),
       TabBar(
         controller: _tabController,
         labelColor: Colors.green,
@@ -90,17 +112,51 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           ],
         ),
       ),
-      Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: Row(
-            children: [
-              Expanded(
-                  child: ElevatedButton(
-                onPressed: goToSummary,
-                child: const Text('Summary'),
+      !model.isGameStarted
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                      child: ElevatedButton(
+                    onPressed: model.canStart ? startGame : null,
+                    child: const Text('Game Start'),
+                  ))
+                ],
               ))
-            ],
-          ))
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                      child: ElevatedButton(
+                    onPressed: goToSummary,
+                    child: const Text(
+                      'Summary',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  )),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: ElevatedButton(
+                    onPressed: gotoBallbyball,
+                    child: const Text(
+                      'Ball by ball',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  )),
+                  const SizedBox(width: 16),
+                  Expanded(
+                      child: ElevatedButton(
+                    onPressed: gotoArchive,
+                    child: const Text(
+                      'Archives',
+                      style: TextStyle(fontSize: 11),
+                    ),
+                  )),
+                ],
+              ))
     ])));
   }
 }

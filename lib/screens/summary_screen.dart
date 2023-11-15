@@ -1,8 +1,10 @@
 import 'package:cricket_app/const/global.dart';
+import 'package:cricket_app/helper/game.dart';
 import 'package:cricket_app/helper/string.dart';
 import 'package:cricket_app/models/game_model.dart';
 import 'package:cricket_app/models/player_model.dart';
 import 'package:cricket_app/models/team_model.dart';
+import 'package:cricket_app/screens/archives_screen.dart';
 import 'package:cricket_app/screens/pdf_screen.dart';
 import 'package:cricket_app/widgets/msg_dialog.dart';
 import 'package:flutter/material.dart';
@@ -36,13 +38,14 @@ Widget SummaryPage(TeamModel team, bool isBatTeam) {
   List<PlayerModel> playerList = team.playerList;
   return Column(children: [
     Text(
-      "${team.name}' s ${isBatTeam ? 'Batting' : 'Bowling'} stats",
+      "${team.name} ${isBatTeam ? 'Batting' : 'Bowling'} Stats",
       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
     ),
     isBatTeam
-        ? Text("Run: ${team.run} / Ball: ${team.ball}",
+        ? Text(
+            "Runs: ${team.run} / Balls: ${team.ball} / Overs: ${overString(team.over)}",
             style: const TextStyle(fontSize: 10))
-        : const SizedBox.shrink(),
+        : const Text(" ", style: TextStyle(fontSize: 10)),
     Expanded(
         child: SingleChildScrollView(
             child: Column(children: [
@@ -79,15 +82,21 @@ Widget SummaryPage(TeamModel team, bool isBatTeam) {
 }
 
 class SummaryScreen extends StatefulWidget {
-  const SummaryScreen({Key? key}) : super(key: key);
+  GameModel? model;
+  SummaryScreen({Key? key, this.model = null}) : super(key: key);
 
   @override
-  _SummaryScreenState createState() => _SummaryScreenState();
+  _SummaryScreenState createState() => _SummaryScreenState(model);
 }
 
 class _SummaryScreenState extends State<SummaryScreen>
     with TickerProviderStateMixin {
-  late final TabController _tabController;
+  late TabController _tabController;
+  GameModel? model;
+  _SummaryScreenState(GameModel? gm) {
+    print(gm);
+    model = gm;
+  }
 
   @override
   void initState() {
@@ -102,46 +111,66 @@ class _SummaryScreenState extends State<SummaryScreen>
   }
 
   void download() {
-    GameModel model = Provider.of<GameModel>(context, listen: false);
     // pdfGenerate(context);
+    GameModel originModel = Provider.of<GameModel>(context, listen: false);
     Navigator.push(
-        context, MaterialPageRoute(builder: (context) => const PdfScreen()));
+        context,
+        MaterialPageRoute(
+            builder: (context) => PdfScreen(model: model ?? originModel)));
   }
 
   void reset() {
-    GameModel model = Provider.of<GameModel>(context, listen: false);
-
+    GameModel originModel = Provider.of<GameModel>(context, listen: false);
     alertDialog(context, GLOBAL['APPNAME'], GLOBAL['RESET_MESSAGE'],
         onSubmit: () {
       alertDialog(context, GLOBAL['APPNAME'], GLOBAL['RESET_MESSAGE'],
           onSubmit: () {
         alertDialog(context, GLOBAL['APPNAME'], GLOBAL['RESET_MESSAGE'],
             onSubmit: () {
-          model.reset();
+          originModel.startOver();
           Navigator.pop(context, 'reset');
         });
       });
     });
   }
 
+  void goToArchive() {
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const ArchiveScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
-    GameModel model = Provider.of<GameModel>(context);
+    GameModel originModel = Provider.of<GameModel>(context, listen: false);
+    GameModel model = this.model ?? originModel;
+
     return DefaultTabController(
         length: 4,
         child: Scaffold(
           appBar: AppBar(
-            leading: BackButton(
-              onPressed: () => Navigator.of(context).pop(),
-            ),
+            leading: model.inning != 3
+                ? BackButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                  )
+                : const SizedBox.shrink(),
             title: const Text('Summary'),
             actions: <Widget>[
-              IconButton(
-                icon: const Icon(Icons.reset_tv),
-                onPressed: () {
-                  reset();
-                },
-              ),
+              model.inning == 3 && originModel == model
+                  ? IconButton(
+                      icon: const Icon(Icons.reset_tv),
+                      onPressed: () {
+                        reset();
+                      },
+                    )
+                  : const SizedBox.shrink(),
+              originModel == model
+                  ? IconButton(
+                      icon: const Icon(Icons.archive),
+                      onPressed: () {
+                        goToArchive();
+                      },
+                    )
+                  : const SizedBox.shrink(),
               IconButton(
                 icon: const Icon(Icons.preview_sharp),
                 onPressed: () {
@@ -150,25 +179,33 @@ class _SummaryScreenState extends State<SummaryScreen>
               )
             ],
           ),
-          bottomNavigationBar: menu(),
+          bottomNavigationBar: menu(model),
           body: Padding(
               padding: const EdgeInsets.all(8),
               child: Column(children: [
-                model.inning == 3
+                model!.inning == 3
                     ? Padding(
                         padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Text(model.gameResult,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.red)))
+                        child: Column(
+                          children: [
+                            Text(
+                              "Result: ${model!.gameSummary}",
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            Text(model!.gameResult,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.red))
+                          ],
+                        ))
                     : const SizedBox.shrink(),
                 Expanded(
                     child: SafeArea(
                   child: TabBarView(
                     children: [
-                      SummaryPage(model.team1, true),
-                      SummaryPage(model.team1, false),
-                      SummaryPage(model.team2, true),
-                      SummaryPage(model.team2, false)
+                      SummaryPage(model!.team1, true),
+                      SummaryPage(model!.team2, false),
+                      SummaryPage(model!.team2, true),
+                      SummaryPage(model!.team1, false)
                     ],
                   ),
                 ))
@@ -176,8 +213,7 @@ class _SummaryScreenState extends State<SummaryScreen>
         ));
   }
 
-  Widget menu() {
-    GameModel model = Provider.of<GameModel>(context, listen: false);
+  Widget menu(GameModel model) {
     return TabBar(
       labelColor: Colors.green,
       indicatorSize: TabBarIndicatorSize.tab,
@@ -185,9 +221,9 @@ class _SummaryScreenState extends State<SummaryScreen>
       indicatorColor: Colors.green,
       tabs: [
         TabItem(model.team1.name.truncateTo(5), "Batting"),
-        TabItem(model.team1.name.truncateTo(5), "Bowl"),
-        TabItem(model.team2.name.truncateTo(5), "Batting"),
         TabItem(model.team2.name.truncateTo(5), "Bowl"),
+        TabItem(model.team2.name.truncateTo(5), "Batting"),
+        TabItem(model.team1.name.truncateTo(5), "Bowl"),
       ],
     );
   }

@@ -17,6 +17,12 @@ Future<void> alertDialog(BuildContext context, String title, String alert,
               Future.delayed(Duration.zero, onSubmit);
             },
           ),
+          ElevatedButton(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
         ],
       );
     },

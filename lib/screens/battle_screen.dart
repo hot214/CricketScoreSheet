@@ -2,6 +2,7 @@ import 'package:cricket_app/const/global.dart';
 import 'package:cricket_app/models/game_model.dart';
 import 'package:cricket_app/models/player_model.dart';
 import 'package:cricket_app/screens/summary_screen.dart';
+import 'package:cricket_app/service/sqliteService.dart';
 import 'package:cricket_app/widgets/input_widget.dart';
 import 'package:cricket_app/widgets/msg_dialog.dart';
 import 'package:flutter/material.dart';
@@ -55,8 +56,7 @@ class _BattingScreenState extends State<BattingScreen> {
   int resetFlag = 0;
   bool isOutPenaltyConfirmed = false;
 
-  final _penaltyController = TextEditingController(text: '0');
-  final _scoreController = TextEditingController(text: '0');
+  final _scoreController = TextEditingController(text: '');
 
   // Create a list of players.
   List<Player> players = List.generate(
@@ -81,69 +81,51 @@ class _BattingScreenState extends State<BattingScreen> {
       isOut = false;
       score = 0;
     });
-  }
-
-  void _undo() {
-    if (history.isEmpty) return;
-
-    ScoreState last = history.last;
-
-    // calculate score
-    var reward = (last.isWideChecked ? 1 : 0) + (last.isNoBallChecked ? 1 : 0);
-    var penalty = (last.isOut ? last.penalty : 0);
-    var isValidDelivery = (!last.isWideChecked && !last.isNoBallChecked);
-
-    setState(() {
-      players[last.selectedPlayer].rValue -= reward + score - penalty;
-      players[last.selectedPlayer].bValue -= isValidDelivery ? 1 : 0;
-    });
-
-    // _updateTeamScore();
-
-    _scoreController.text = '0';
-    score = 0;
-
-    // calculate over
-    int overs = (!last.isWideChecked && !last.isNoBallChecked) ? 1 : 0;
-    overValue -= overs;
-    int aOver = (overValue / 6.0).floor();
-    int bOver = overValue % 6;
-    setState(() {
-      over = '$aOver.$bOver';
-    });
-
-    history.removeLast();
+    _scoreController.text = '';
   }
 
   void goToSummary() async {
-    final result = await Navigator.push(context,
-        MaterialPageRoute(builder: (context) => const SummaryScreen()));
+    final result = await Navigator.push(
+        context, MaterialPageRoute(builder: (context) => SummaryScreen()));
     if (result == 'reset') {
       reset();
     }
   }
 
-  void handleAdd(
-      bool isWideChecked, bool isNoBallChecked, bool isOut, int score) {
+  void handleAdd() {
     GameModel model = Provider.of<GameModel>(context, listen: false);
     var state = model.add(isWideChecked, isNoBallChecked, isOut, score);
-    if (state == true) {
+    if (state == AddStateType.batmanLimitBall) {
+      displaySnackbar("Batman reaches his limit ball");
+    } else if (state == AddStateType.bolwerLimitBall) {
+      displaySnackbar("Bowler reaches his limit ball");
+    } else if (state == AddStateType.success) {
+      displaySnackbar("${model.lastGameState} has been added");
+    }
+    if (state == AddStateType.nextInnings) {
       model.nextInning();
-      if (model.inning == 1) {
+      if (model.inning == 2) {
         // The 1st innings has ended. The innings history has now been archived
-        alertDialog(context, 'Cricket Game',
-            'The 1st innings has ended!\nThe innings history has now been archived',
-            onSubmit: () {
-          goToSummary();
-        });
+        displaySnackbar(
+            "The 1st innings has ended!\nThe innings history has now been archived");
       } else {
-        alertDialog(
-            context, 'Cricket Game', 'Game has ended!\n${model.gameResult}',
-            onSubmit: () {
+        alertDialog(context, 'Cricket Game',
+            'The match has ended!\n${model.gameResult}', onSubmit: () {
+          SqliteService.createItem(model);
           goToSummary();
         });
       }
     }
+    _scoreController.text = '';
+    setState(() {
+      score = 0;
+    });
+  }
+
+  void handleUndo() {
+    GameModel model = Provider.of<GameModel>(context, listen: false);
+    displaySnackbar("${model.lastGameState} has been undone");
+    model.undo();
   }
 
   void handleReset() {
@@ -175,6 +157,15 @@ class _BattingScreenState extends State<BattingScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 10, color: Colors.red)))
     ]);
+  }
+
+  void displaySnackbar(String message, {int duration = 1}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: Duration(seconds: duration),
+      ),
+    );
   }
 
   @override
@@ -214,7 +205,7 @@ class _BattingScreenState extends State<BattingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Over',
+                      'Overs',
                       style: titleStyle,
                     ),
                     Text(
@@ -228,7 +219,7 @@ class _BattingScreenState extends State<BattingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                const Text("Bowman: "),
+                const Text("Bowler: "),
                 const SizedBox(
                   width: 10,
                 ),
@@ -237,15 +228,22 @@ class _BattingScreenState extends State<BattingScreen> {
                     isExpanded: true,
                     value: currentBowman,
                     elevation: 16,
-                    onChanged: (PlayerModel? value) {
-                      // This is called when the user selects an item.
-                      model.currentBowman = value!;
-                    },
+                    onChanged: model.isGameStarted
+                        ? (PlayerModel? value) {
+                            // This is called when the user selects an item.
+                            model.currentBowman = value!;
+                          }
+                        : null,
                     items: bowmanList.map<DropdownMenuItem<PlayerModel>>(
                         (PlayerModel player) {
                       return DropdownMenuItem<PlayerModel>(
                         value: player,
-                        child: Text(player.name, style: infoStyle),
+                        enabled: player.givenBall < model.limitBall,
+                        child: Text(player.name,
+                            style: player.givenBall < model.limitBall ||
+                                    !model.isGameStarted
+                                ? infoStyle
+                                : disabledStyle),
                       );
                     }).toList(),
                   ),
@@ -271,48 +269,63 @@ class _BattingScreenState extends State<BattingScreen> {
                       contentPadding: const EdgeInsets.all(0),
                       visualDensity: const VisualDensity(vertical: -4),
                       title: GestureDetector(
-                          onTap: () {
-                            if (model.inning > 1) return;
-                            inputDialog(context, "Player Name",
-                                "Input Player Name", batmanList[index].name,
-                                onSubmit: (String name) {
-                              batmanList[index].name = name;
-                              model.batTeam.setPlayer(batmanList);
-                            });
-                          },
+                          onTap: !model.isGameStarted
+                              ? () {
+                                  if (model.inning > 1) return;
+                                  inputDialog(
+                                      context,
+                                      "Player Name",
+                                      "Input Player Name",
+                                      batmanList[index].name,
+                                      onSubmit: (String name) {
+                                    batmanList[index].name = name;
+                                    model.batTeam.setPlayer(batmanList);
+                                  });
+                                }
+                              : null,
                           child: Text(
                               batmanList[index].ball == model.limitBall
-                                  ? "${batmanList[index].name} (completed)"
+                                  ? "${batmanList[index].name}"
                                   : batmanList[index].name,
                               style: batmanList[index].ball == model.limitBall
                                   ? disabledStyle
                                   : infoStyle)),
-                      subtitle: currentBatman == batmanList[index]
+                      subtitle: model.isGameStarted &&
+                              currentBatman == batmanList[index]
                           ? GestureDetector(
-                              onTap: () {
-                                if (model.inning > 1) return;
-                                inputDialog(context, "Player Name",
-                                    "Input Player Name", batmanList[index].name,
-                                    onSubmit: (String name) {
-                                  batmanList[index].name = name;
-                                  model.batTeam.setPlayer(batmanList);
-                                });
-                              },
+                              onTap: !model.isGameStarted
+                                  ? () {
+                                      if (model.inning > 1) return;
+                                      inputDialog(
+                                          context,
+                                          "Player Name",
+                                          "Input Player Name",
+                                          batmanList[index].name,
+                                          onSubmit: (String name) {
+                                        batmanList[index].name = name;
+                                        model.batTeam.setPlayer(batmanList);
+                                      });
+                                    }
+                                  : null,
                               child: const Text('Striker', style: smallStyle))
                           : null,
-                      leading: Radio(
-                        value: batmanList[index],
-                        groupValue: currentBatman,
-                        onChanged: (value) {
-                          model.currentBatman = value!;
-                        },
-                      ),
+                      leading: model.isGameStarted
+                          ? Radio(
+                              value: batmanList[index],
+                              groupValue: currentBatman,
+                              onChanged: (value) {
+                                model.currentBatman = value!;
+                              },
+                            )
+                          : null,
                       trailing: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedPlayer = index;
-                            });
-                          },
+                          onTap: model.isGameStarted
+                              ? () {
+                                  setState(() {
+                                    selectedPlayer = index;
+                                  });
+                                }
+                              : null,
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -327,6 +340,30 @@ class _BattingScreenState extends State<BattingScreen> {
                           )),
                     ),
                   ),
+                !model.isGameStarted
+                    ? Container(
+                        key: const Key('control_button'),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton(
+                                key: const Key("add_player"),
+                                icon: const Icon(Icons.add),
+                                onPressed: () {
+                                  model.addPlayer();
+                                },
+                              ),
+                              model.canDelete
+                                  ? IconButton(
+                                      key: const Key("remove_player"),
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: () {
+                                        model.removePlayer();
+                                      },
+                                    )
+                                  : const SizedBox.shrink(),
+                            ]))
+                    : const SizedBox.shrink(key: Key('shrink_size'))
               ],
               onReorder: (int oldIndex, int newIndex) {
                 model.batTeam.switchOrder(oldIndex, newIndex);
@@ -343,13 +380,15 @@ class _BattingScreenState extends State<BattingScreen> {
                       children: [
                         Checkbox(
                           value: isWideChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              isWideChecked = value ?? false;
-                              isNoBallChecked =
-                                  isNoBallChecked && !isWideChecked;
-                            });
-                          },
+                          onChanged: model.isGameStarted
+                              ? (value) {
+                                  setState(() {
+                                    isWideChecked = value ?? false;
+                                    isNoBallChecked =
+                                        isNoBallChecked && !isWideChecked;
+                                  });
+                                }
+                              : null,
                         ),
                         const Text(
                           'Wide',
@@ -362,12 +401,15 @@ class _BattingScreenState extends State<BattingScreen> {
                     child: Row(children: [
                       Checkbox(
                         value: isNoBallChecked,
-                        onChanged: (value) {
-                          setState(() {
-                            isNoBallChecked = value ?? false;
-                            isWideChecked = isWideChecked && !isNoBallChecked;
-                          });
-                        },
+                        onChanged: model.isGameStarted
+                            ? (value) {
+                                setState(() {
+                                  isNoBallChecked = value ?? false;
+                                  isWideChecked =
+                                      isWideChecked && !isNoBallChecked;
+                                });
+                              }
+                            : null,
                       ),
                       const Text(
                         'No ball',
@@ -380,11 +422,13 @@ class _BattingScreenState extends State<BattingScreen> {
                       children: [
                         Checkbox(
                           value: isOut,
-                          onChanged: (value) {
-                            setState(() {
-                              isOut = value ?? false;
-                            });
-                          },
+                          onChanged: model.isGameStarted
+                              ? (value) {
+                                  setState(() {
+                                    isOut = value ?? false;
+                                  });
+                                }
+                              : null,
                         ),
                         const Text(
                           'Out',
@@ -406,6 +450,7 @@ class _BattingScreenState extends State<BattingScreen> {
                     child: TextFormField(
                       controller: _scoreController,
                       style: infoStyle,
+                      readOnly: !model.isGameStarted,
                       decoration: const InputDecoration(labelText: 'Score'),
                       keyboardType: TextInputType.number,
                       onChanged: (value) {
@@ -423,28 +468,35 @@ class _BattingScreenState extends State<BattingScreen> {
               children: [
                 Expanded(
                     child: ElevatedButton(
-                  onPressed: () {
-                    // model.add();
-                    handleAdd(isWideChecked, isNoBallChecked, isOut, score);
-                  },
+                  onPressed: model.isGameStarted &&
+                          (isWideChecked ||
+                              isNoBallChecked ||
+                              isOut ||
+                              _scoreController.text.isNotEmpty)
+                      ? () {
+                          handleAdd();
+                        }
+                      : null,
                   child: const Text('Add'),
                 )),
                 const SizedBox(width: 16),
                 Expanded(
                     child: ElevatedButton(
-                  onPressed: history.isEmpty
-                      ? null
-                      : () {
-                          _undo();
-                        },
+                  onPressed: model.canUndo
+                      ? () {
+                          handleUndo();
+                        }
+                      : null,
                   child: const Text('Undo'),
                 )),
                 const SizedBox(width: 16),
                 Expanded(
                     child: ElevatedButton(
-                  onPressed: () {
-                    handleReset();
-                  },
+                  onPressed: model.isGameStarted
+                      ? () {
+                          handleReset();
+                        }
+                      : null,
                   child: const Text('Del All'),
                 )),
               ],
@@ -457,21 +509,21 @@ class _BattingScreenState extends State<BattingScreen> {
                 ),
                 Expanded(
                   child: GestureDetector(
-                      onTap: () => {
-                            if (!model.outPenaltyConfirmed)
-                              {
-                                inputDialog(context, "Out Penalty",
-                                    "Input Out Penalty", "${model.outPenalty}",
+                      onTap: !model.isGameStarted
+                          ? () => {
+                                inputDialog(
+                                    context,
+                                    "Out Penalty",
+                                    "Input Out Penalty",
+                                    "${model.outPenalty < 0 ? "" : model.outPenalty}",
                                     onSubmit: (String out_penalty) {
                                   model.outPenalty = int.parse(out_penalty);
                                 })
                               }
-                          },
+                          : null,
                       child: Text(
-                        'Out Penalty: ${model.outPenalty}',
-                        style: model.outPenaltyConfirmed
-                            ? confirmedStyle
-                            : infoStyle,
+                        'Out Penalty: ${model.outPenalty < 0 ? "" : model.outPenalty}',
+                        style: infoStyle,
                       )),
                 ),
                 const SizedBox(
@@ -480,21 +532,21 @@ class _BattingScreenState extends State<BattingScreen> {
                 ),
                 Expanded(
                   child: GestureDetector(
-                      onTap: () => {
-                            if (!model.limitBallConfirmed)
-                              {
-                                inputDialog(context, "Ball Limit",
-                                    "Input Max Balls", "${model.limitBall}",
+                      onTap: !model.isGameStarted
+                          ? () => {
+                                inputDialog(
+                                    context,
+                                    "Ball Limit",
+                                    "Input Max Balls",
+                                    "${model.limitBall < 0 ? "" : model.limitBall}",
                                     onSubmit: (String ball_limit) {
                                   model.limitBall = int.parse(ball_limit);
                                 })
                               }
-                          },
+                          : null,
                       child: Text(
-                        'Max Balls: ${model.limitBall}',
-                        style: model.limitBallConfirmed
-                            ? confirmedStyle
-                            : infoStyle,
+                        'Max Balls: ${model.limitBall < 0 ? "" : model.limitBall}',
+                        style: infoStyle,
                       )),
                 ),
                 const SizedBox(

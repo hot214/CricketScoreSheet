@@ -22,6 +22,12 @@ Future<void> inputDialog(
               onSubmit(controller.text);
             },
           ),
+          ElevatedButton(
+            child: const Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          )
         ],
       );
     },
