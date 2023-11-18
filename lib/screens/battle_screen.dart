@@ -109,8 +109,8 @@ class _BattingScreenState extends State<BattingScreen> {
         displaySnackbar(
             "The 1st innings has ended!\nThe innings history has now been archived");
       } else {
-        alertDialog(context, 'Cricket Game',
-            'The match has ended!\n${model.gameResult}', onSubmit: () {
+        alertDialog(context, '', 'The match has ended!\n${model.gameResult}',
+            cancellable: false, onSubmit: () {
           SqliteService.createItem(model);
           goToSummary();
         });
@@ -123,12 +123,14 @@ class _BattingScreenState extends State<BattingScreen> {
       isOut = false;
       isNoBallChecked = false;
     });
+    SqliteService.saveStatus(model);
   }
 
   void handleUndo() {
     GameModel model = Provider.of<GameModel>(context, listen: false);
     displaySnackbar("${model.lastGameState} has been undone");
     model.undo();
+    SqliteService.saveStatus(model);
   }
 
   void handleReset() {
@@ -146,6 +148,7 @@ class _BattingScreenState extends State<BattingScreen> {
             isOut = false;
             score = 0;
           });
+          SqliteService.saveStatus(model);
         });
       });
     });

@@ -109,10 +109,10 @@ pw.Widget buildSection(TeamSummary summary) {
               mainAxisAlignment: pw.MainAxisAlignment.start,
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text("${summary.name} ${summary.type} stats"),
-                pw.Text(summary.type == "Batting"
+                pw.Text("${summary.name} ${summary.type} statistics"),
+                /* pw.Text(summary.type == "Batting"
                     ? "Runs: ${summary.run} Balls: ${summary.ball} Overs: ${summary.overs}"
-                    : "Balls: ${summary.ball}"),
+                    : "Balls: ${summary.ball}"), */
               ]),
         ),
         pw.TableHelper.fromTextArray(
@@ -121,8 +121,12 @@ pw.Widget buildSection(TeamSummary summary) {
             data: summary.data),
         pw.Padding(padding: const pw.EdgeInsets.only(top: 5)),
         pw.Text(summary.type == "Batting"
-            ? "Total: ${summary.run} runs in ${summary.overs} stats"
-            : "Total: ${summary.ball} balls"),
+            ? "Runs: ${summary.run}, Balls: ${summary.ball}, Overs: ${summary.overs}"
+            : ""),
+        /*
+        pw.Text(summary.type == "Batting"
+            ? "Total: ${summary.run} runs in ${summary.overs} statistics"
+            : "Total: ${summary.ball} balls"),*/
       ],
     ),
   );

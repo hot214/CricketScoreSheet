@@ -118,10 +118,10 @@ class TeamModel extends ChangeNotifier {
       List<String> item = [];
       item.add("${i + 1}");
       item.add(playerList[i].name);
-      if (type == 'bat') {
+      if (type == 'Batting') {
         item.add("${playerList[i].run}");
         item.add("${playerList[i].ball}");
-      } else if (type == 'bow') {
+      } else if (type == 'Bowling') {
         item.add("${playerList[i].givenBall}");
         item.add("${playerList[i].givenRun}");
       }
@@ -166,7 +166,7 @@ class TeamSummary {
   int run, ball;
 
   List<List<String>> data = List.empty();
-  final List<String> header = <String>['No', 'Player', 'Run', 'Ball'];
+  final List<String> header = <String>['No', 'Player', 'Runs', 'Balls'];
 
   TeamSummary(
       {this.name = '',

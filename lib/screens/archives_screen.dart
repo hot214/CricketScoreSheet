@@ -75,27 +75,26 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
   }
 
   Widget archiveListWidget(List<GameModel>? data) {
-    return Stack(children: [
-      Column(children: [
-        for (GameModel model in data!)
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Color.fromARGB(230, 230, 230, 230),
-                  width: 1.0,
-                ),
+    return SingleChildScrollView(
+        child: Column(children: [
+      for (GameModel model in data!)
+        Container(
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Color.fromARGB(230, 230, 230, 230),
+                width: 1.0,
               ),
             ),
-            child: ListTile(
-                contentPadding: const EdgeInsets.all(8),
-                visualDensity: const VisualDensity(vertical: -4),
-                title: Text(model.gameSummary, style: infoStyle),
-                onLongPress: () => triggerItemMenu(model),
-                onTap: () => triggerSummary(model)),
           ),
-      ])
-    ]);
+          child: ListTile(
+              contentPadding: const EdgeInsets.all(8),
+              visualDensity: const VisualDensity(vertical: -4),
+              title: Text(model.gameSummary, style: infoStyle),
+              onLongPress: () => triggerItemMenu(model),
+              onTap: () => triggerSummary(model)),
+        ),
+    ]));
   }
 
   @override

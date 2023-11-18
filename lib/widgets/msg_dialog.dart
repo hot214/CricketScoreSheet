@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 Future<void> alertDialog(BuildContext context, String title, String alert,
-    {onSubmit}) async {
+    {onSubmit, cancellable = true}) async {
   return showDialog(
     context: context,
     barrierDismissible: false,
@@ -17,12 +17,14 @@ Future<void> alertDialog(BuildContext context, String title, String alert,
               Future.delayed(Duration.zero, onSubmit);
             },
           ),
-          ElevatedButton(
-            child: const Text('Cancel'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
+          cancellable
+              ? ElevatedButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                )
+              : const SizedBox.shrink(),
         ],
       );
     },
