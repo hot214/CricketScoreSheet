@@ -139,80 +139,6 @@ class _SummaryScreenState extends State<SummaryScreen>
         MaterialPageRoute(builder: (context) => const ArchiveScreen()));
   }
 
-  @override
-  Widget build(BuildContext context) {
-    GameModel originModel = Provider.of<GameModel>(context, listen: false);
-    GameModel model = this.model ?? originModel;
-
-    return DefaultTabController(
-        length: 4,
-        child: Scaffold(
-          appBar: AppBar(
-            leading: model.inning != 3
-                ? BackButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                  )
-                : const SizedBox.shrink(),
-            title: const Text('Summary'),
-            actions: <Widget>[
-              model.inning == 3 && originModel == model
-                  ? IconButton(
-                      icon: const Icon(Icons.reset_tv),
-                      onPressed: () {
-                        reset();
-                      },
-                    )
-                  : const SizedBox.shrink(),
-              /*originModel == model
-                  ? IconButton(
-                      icon: const Icon(Icons.archive),
-                      onPressed: () {
-                        goToArchive();
-                      },
-                    )
-                  : const SizedBox.shrink(),*/
-              IconButton(
-                icon: const Icon(Icons.preview_sharp),
-                onPressed: () {
-                  download();
-                },
-              )
-            ],
-          ),
-          bottomNavigationBar: menu(model),
-          body: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Column(children: [
-                model!.inning == 3
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Column(
-                          children: [
-                            Text(
-                              "Result: ${model!.gameSummary}",
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                            Text(model!.gameResult,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(color: Colors.red))
-                          ],
-                        ))
-                    : const SizedBox.shrink(),
-                Expanded(
-                    child: SafeArea(
-                  child: TabBarView(
-                    children: [
-                      SummaryPage(model!.team1, true),
-                      SummaryPage(model!.team2, false),
-                      SummaryPage(model!.team2, true),
-                      SummaryPage(model!.team1, false)
-                    ],
-                  ),
-                ))
-              ])),
-        ));
-  }
-
   Widget menu(GameModel model) {
     return TabBar(
       labelColor: Colors.green,
@@ -226,5 +152,92 @@ class _SummaryScreenState extends State<SummaryScreen>
         TabItem(model.team1.name.truncateTo(5), "Bowl"),
       ],
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    GameModel originModel = Provider.of<GameModel>(context, listen: false);
+    GameModel model = this.model ?? originModel;
+
+    return WillPopScope(
+        onWillPop: () async {
+          if (model.inning == 3 && model.isGameStarted == false) {
+            return true;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Match is completed, you should start over.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return false;
+        },
+        child: DefaultTabController(
+            length: 4,
+            child: Scaffold(
+              appBar: AppBar(
+                leading: model.inning != 3 || model.isGameStarted == false
+                    ? BackButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                      )
+                    : const SizedBox.shrink(),
+                title: const Text('Summary'),
+                actions: <Widget>[
+                  model.inning == 3 && originModel == model
+                      ? IconButton(
+                          icon: const Icon(Icons.reset_tv),
+                          onPressed: () {
+                            reset();
+                          },
+                        )
+                      : const SizedBox.shrink(),
+                  /*originModel == model
+                  ? IconButton(
+                      icon: const Icon(Icons.archive),
+                      onPressed: () {
+                        goToArchive();
+                      },
+                    )
+                  : const SizedBox.shrink(),*/
+                  IconButton(
+                    icon: const Icon(Icons.preview_sharp),
+                    onPressed: () {
+                      download();
+                    },
+                  )
+                ],
+              ),
+              bottomNavigationBar: menu(model),
+              body: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(children: [
+                    model!.inning == 3
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Column(
+                              children: [
+                                Text(
+                                  "Result: ${model!.gameSummary}",
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                                Text(model!.gameResult,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.red))
+                              ],
+                            ))
+                        : const SizedBox.shrink(),
+                    Expanded(
+                        child: SafeArea(
+                      child: TabBarView(
+                        children: [
+                          SummaryPage(model!.team1, true),
+                          SummaryPage(model!.team2, false),
+                          SummaryPage(model!.team2, true),
+                          SummaryPage(model!.team1, false)
+                        ],
+                      ),
+                    ))
+                  ])),
+            )));
   }
 }

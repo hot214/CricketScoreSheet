@@ -12,9 +12,38 @@ class SqliteService {
         await database.execute(
           "CREATE TABLE archives(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT NOT NULL, date TEXT)",
         );
+        await database.execute(
+          "CREATE TABLE status(id INTEGER PRIMARY KEY AUTOINCREMENT, data TEXT NOT NULL)",
+        );
       },
       version: 1,
     );
+  }
+
+  static Future<int> saveStatus(GameModel model) async {
+    final Database db = await initializeDB();
+
+    final List<Map<String, Object?>> queryResult = await db.query('status');
+    if (queryResult.isNotEmpty) {
+      final id = await db.update('status', {'data': model.toJson()},
+          where: "id = ?", whereArgs: [queryResult[0]['id']]);
+      return id;
+    } else {
+      final id = await db.insert('status', {'data': model.toJson()},
+          conflictAlgorithm: ConflictAlgorithm.replace);
+      return id;
+    }
+  }
+
+  static Future<GameModel> getStatus() async {
+    final Database db = await initializeDB();
+
+    final List<Map<String, Object?>> queryResult = await db.query('status');
+    if (queryResult.isNotEmpty) {
+      return GameModel.fromJson(queryResult[0]['data'].toString());
+    } else {
+      return GameModel();
+    }
   }
 
   static Future<int> createItem(GameModel model) async {

@@ -32,12 +32,16 @@ class _PdfScreenState extends State<PdfScreen> {
 
   void download() async {
     final Directory root = findRoot(await getApplicationDocumentsDirectory());
+    final List<Directory>? documentDirs =
+        await getExternalStorageDirectories(type: StorageDirectory.documents);
+    print(documentDirs);
+
     GameModel originModel = Provider.of<GameModel>(context, listen: false);
 
     String? path = await FilesystemPicker.open(
       title: 'Save to folder',
       context: context,
-      rootDirectory: root!,
+      rootDirectory: documentDirs![0],
       fsType: FilesystemType.folder,
       pickText: 'Save file',
     );

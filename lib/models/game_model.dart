@@ -29,6 +29,18 @@ class GameModel extends ChangeNotifier {
     _teamB.addListener(() => notifyListeners());
   }
 
+  void deepCopy(GameModel model) {
+    _teamA = model._teamA;
+    _teamB = model._teamB;
+    _inning = model._inning;
+    _outPenalty = model._outPenalty;
+    _limitBall = model._limitBall;
+    startTime = model.startTime;
+    endTime = model.endTime;
+    _isGameStarted = model._isGameStarted;
+    notifyListeners();
+  }
+
   bool get isGameStarted => _isGameStarted;
   bool get canDelete => team1.playerList.length > 1;
   List<GameState> get history => batTeam.history;
@@ -260,8 +272,8 @@ class GameModel extends ChangeNotifier {
     _teamB = TeamModel.fromMap(data["teamB"]);
     _outPenalty = data["outPenalty"];
     _limitBall = data["limitBall"];
-    _inning = 3;
-    _isGameStarted = false;
+    _inning = data["inning"] ?? 3;
+    _isGameStarted = data["isGameStarted"] ?? false;
     startTime = DateTime.fromMillisecondsSinceEpoch(data["startTime"]);
     endTime = DateTime.fromMillisecondsSinceEpoch(data["endTime"]);
     return this;
@@ -273,6 +285,8 @@ class GameModel extends ChangeNotifier {
     result["teamB"] = _teamB.toMap();
     result["outPenalty"] = _outPenalty;
     result["limitBall"] = _limitBall;
+    result["inning"] = _inning;
+    result["isGameStarted"] = _isGameStarted;
     result["startTime"] = startTime.millisecondsSinceEpoch;
     result["endTime"] = endTime.millisecondsSinceEpoch;
     return result;
