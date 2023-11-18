@@ -7,6 +7,8 @@ import 'package:cricket_app/models/team_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+const int APP_VERSION = 1;
+
 class GameModel extends ChangeNotifier {
   late TeamModel _teamA;
   late TeamModel _teamB;
@@ -103,9 +105,7 @@ class GameModel extends ChangeNotifier {
     if (inning > 1 && team2.run > team1.run) {
       return true;
     }
-    print("CHECK GAME FINISHED");
     for (var i = 0; i < batTeam.playerList.length; i++) {
-      print(batTeam.playerList[i].ball);
       if (batTeam.playerList[i].ball < limitBall) {
         return false;
       }
@@ -159,8 +159,9 @@ class GameModel extends ChangeNotifier {
       bool isWideChecked, bool isNoBallChecked, bool isOut, int score) {
     // calculate score
     if (currentBatman.ball == limitBall) return AddStateType.batmanLimitBall;
-    if (currentBowman.givenBall == limitBall)
+    if (currentBowman.givenBall == limitBall) {
       return AddStateType.bolwerLimitBall;
+    }
 
     int reward = (isWideChecked ? 1 : 0) + (isNoBallChecked ? 1 : 0);
     int penalty = (isOut ? outPenalty : 0);
@@ -182,9 +183,10 @@ class GameModel extends ChangeNotifier {
     if (currentBatman.ball == limitBall) {
       int score = currentBatman.run;
       int i = currentBatman.outBowmanStack.list.length - 1;
-      while (score < 0 && i > 0) {
-        currentBatman.outBowmanStack.list[i--].givenRun -=
-            max(score, -outPenalty);
+      while (score < 0 && i >= 0) {
+        currentBatman.outBowmanStack.list[i--].givenRun -= APP_VERSION == 1
+            ? max(score, -outPenalty)
+            : -max(score, -outPenalty);
         score += outPenalty;
       }
     }
@@ -215,9 +217,11 @@ class GameModel extends ChangeNotifier {
     if (state.currentBatman!.ball == limitBall) {
       int score = state.currentBatman!.run;
       int i = state.currentBatman!.outBowmanStack.list.length - 1;
-      while (score < 0 && i > 0) {
+      while (score < 0 && i >= 0) {
         state.currentBatman!.outBowmanStack.list[i--].givenRun +=
-            max(score, -outPenalty);
+            APP_VERSION == 1
+                ? max(score, -outPenalty)
+                : -max(score, -outPenalty);
         score += outPenalty;
       }
     }

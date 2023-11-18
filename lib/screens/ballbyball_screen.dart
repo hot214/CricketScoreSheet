@@ -73,12 +73,12 @@ class _BallByBallScreenState extends State<BallByBallScreen>
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text('Ball by Ball'),
-            actions: <Widget>[
+            /*actions: <Widget>[
               ElevatedButton(
                 onPressed: startOver,
                 child: const Text('Start Over'),
               )
-            ],
+            ],*/
           ),
           body: Padding(
               padding: const EdgeInsets.all(8),
@@ -124,7 +124,7 @@ class _BallByBallScreenState extends State<BallByBallScreen>
           text: "${model.team1.name} Batting",
         ),
         Tab(
-          text: "${model.team1.name} Batting",
+          text: "${model.team2.name} Batting",
         ),
       ],
     );

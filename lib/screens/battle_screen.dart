@@ -96,9 +96,9 @@ class _BattingScreenState extends State<BattingScreen> {
     GameModel model = Provider.of<GameModel>(context, listen: false);
     var state = model.add(isWideChecked, isNoBallChecked, isOut, score);
     if (state == AddStateType.batmanLimitBall) {
-      displaySnackbar("Batman reaches his limit ball");
+      displaySnackbar("Batsman has reached maximum balls");
     } else if (state == AddStateType.bolwerLimitBall) {
-      displaySnackbar("Bowler reaches his limit ball");
+      displaySnackbar("Bowler has reached maximum balls");
     } else if (state == AddStateType.success) {
       displaySnackbar("${model.lastGameState} has been added");
     }
@@ -119,6 +119,9 @@ class _BattingScreenState extends State<BattingScreen> {
     _scoreController.text = '';
     setState(() {
       score = 0;
+      isWideChecked = false;
+      isOut = false;
+      isNoBallChecked = false;
     });
   }
 
@@ -159,7 +162,7 @@ class _BattingScreenState extends State<BattingScreen> {
     ]);
   }
 
-  void displaySnackbar(String message, {int duration = 1}) {
+  void displaySnackbar(String message, {int duration = 3}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),

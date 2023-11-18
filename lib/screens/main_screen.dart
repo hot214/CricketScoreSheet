@@ -121,6 +121,12 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
                       child: ElevatedButton(
                     onPressed: model.canStart ? startGame : null,
                     child: const Text('Game Start'),
+                  )),
+                  const SizedBox(width: 20),
+                  Expanded(
+                      child: ElevatedButton(
+                    onPressed: gotoArchive,
+                    child: const Text('Archives'),
                   ))
                 ],
               ))

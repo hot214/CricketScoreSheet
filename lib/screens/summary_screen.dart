@@ -163,14 +163,14 @@ class _SummaryScreenState extends State<SummaryScreen>
                       },
                     )
                   : const SizedBox.shrink(),
-              originModel == model
+              /*originModel == model
                   ? IconButton(
                       icon: const Icon(Icons.archive),
                       onPressed: () {
                         goToArchive();
                       },
                     )
-                  : const SizedBox.shrink(),
+                  : const SizedBox.shrink(),*/
               IconButton(
                 icon: const Icon(Icons.preview_sharp),
                 onPressed: () {
