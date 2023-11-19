@@ -70,8 +70,13 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
   }
 
   void triggerSummary(GameModel model) {
-    Navigator.push(context,
-        MaterialPageRoute(builder: (context) => SummaryScreen(model: model)));
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => SummaryScreen(
+                  model: model,
+                  isArchive: true,
+                )));
   }
 
   Widget archiveListWidget(List<GameModel>? data) {

@@ -156,7 +156,7 @@ class _BattingScreenState extends State<BattingScreen> {
 
   Widget showNotification() {
     GameModel model = Provider.of<GameModel>(context);
-    if (model.inning == 1) return const SizedBox.shrink();
+    if (model.inning != 2) return const SizedBox.shrink();
     return Row(children: [
       Expanded(
           child: Text(model.strategy,
@@ -236,7 +236,6 @@ class _BattingScreenState extends State<BattingScreen> {
                     elevation: 16,
                     onChanged: model.isGameStarted
                         ? (PlayerModel? value) {
-                            // This is called when the user selects an item.
                             model.currentBowman = value!;
                           }
                         : null,

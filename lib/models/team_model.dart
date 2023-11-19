@@ -141,6 +141,7 @@ class TeamModel extends ChangeNotifier {
     for (var player in data["player_list"]) {
       _player_list.add(PlayerModel.fromMap(player));
     }
+    notifyListeners();
   }
 
   Map<String, Object> toMap() {

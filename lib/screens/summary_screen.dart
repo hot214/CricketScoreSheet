@@ -83,7 +83,9 @@ Widget SummaryPage(TeamModel team, bool isBatTeam) {
 
 class SummaryScreen extends StatefulWidget {
   GameModel? model;
-  SummaryScreen({Key? key, this.model = null}) : super(key: key);
+  bool? isArchive = false;
+
+  SummaryScreen({Key? key, this.model, this.isArchive}) : super(key: key);
 
   @override
   _SummaryScreenState createState() => _SummaryScreenState(model);
@@ -121,11 +123,11 @@ class _SummaryScreenState extends State<SummaryScreen>
 
   void reset() {
     GameModel originModel = Provider.of<GameModel>(context, listen: false);
-    alertDialog(context, GLOBAL['APPNAME'], GLOBAL['RESET_MESSAGE'],
+    alertDialog(context, GLOBAL['APPNAME'], GLOBAL['STARTOVER_MESSAGE'],
         onSubmit: () {
-      alertDialog(context, GLOBAL['APPNAME'], GLOBAL['RESET_MESSAGE'],
+      alertDialog(context, GLOBAL['APPNAME'], GLOBAL['STARTOVER_MESSAGE'],
           onSubmit: () {
-        alertDialog(context, GLOBAL['APPNAME'], GLOBAL['RESET_MESSAGE'],
+        alertDialog(context, GLOBAL['APPNAME'], GLOBAL['STARTOVER_MESSAGE'],
             onSubmit: () {
           originModel.startOver();
           Navigator.pop(context, 'reset');
@@ -161,7 +163,8 @@ class _SummaryScreenState extends State<SummaryScreen>
 
     return WillPopScope(
         onWillPop: () async {
-          if (model.inning == 3 && model.isGameStarted == false) {
+          if (widget.isArchive ?? widget.isArchive == true) return true;
+          if (model.inning < 3) {
             return true;
           }
           ScaffoldMessenger.of(context).showSnackBar(
@@ -176,7 +179,9 @@ class _SummaryScreenState extends State<SummaryScreen>
             length: 4,
             child: Scaffold(
               appBar: AppBar(
-                leading: model.inning != 3 || model.isGameStarted == false
+                leading: model.inning != 3 ||
+                        model.isGameStarted == false ||
+                        widget.isArchive == true
                     ? BackButton(
                         onPressed: () => Navigator.of(context).pop(),
                       )

@@ -58,6 +58,7 @@ class GameModel extends ChangeNotifier {
   PlayerModel get currentBowman => bowTeam.currentPlayer;
   set currentBowman(PlayerModel player) {
     bowTeam.currentPlayer = player;
+    notifyListeners();
   }
 
   PlayerModel get currentBatman => batTeam.currentPlayer;
