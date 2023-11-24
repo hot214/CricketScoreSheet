@@ -7,7 +7,7 @@ import 'package:cricket_app/models/team_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-const int APP_VERSION = 2;
+const int APP_VERSION = 1;
 
 class GameModel extends ChangeNotifier {
   late TeamModel _teamA;
