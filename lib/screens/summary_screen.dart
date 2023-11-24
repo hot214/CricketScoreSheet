@@ -16,7 +16,7 @@ const TextStyle teamStyle =
 const TextStyle infoStyle =
     TextStyle(fontSize: 14, fontWeight: FontWeight.normal);
 
-Widget TabItem(String title, String info) {
+Widget tabItem(String title, String info) {
   return Tab(
       child: Column(
     children: [
@@ -96,7 +96,6 @@ class _SummaryScreenState extends State<SummaryScreen>
   late TabController _tabController;
   GameModel? model;
   _SummaryScreenState(GameModel? gm) {
-    print(gm);
     model = gm;
   }
 
@@ -148,10 +147,10 @@ class _SummaryScreenState extends State<SummaryScreen>
       indicatorPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
       indicatorColor: Colors.green,
       tabs: [
-        TabItem(model.team1.name.truncateTo(5), "Batting"),
-        TabItem(model.team2.name.truncateTo(5), "Bowl"),
-        TabItem(model.team2.name.truncateTo(5), "Batting"),
-        TabItem(model.team1.name.truncateTo(5), "Bowl"),
+        tabItem(model.team1.name.truncateTo(5), "Batting"),
+        tabItem(model.team2.name.truncateTo(5), "Bowl"),
+        tabItem(model.team2.name.truncateTo(5), "Batting"),
+        tabItem(model.team1.name.truncateTo(5), "Bowl"),
       ],
     );
   }
@@ -168,8 +167,8 @@ class _SummaryScreenState extends State<SummaryScreen>
             return true;
           }
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Match is completed, you should start over.'),
+            SnackBar(
+              content: Text(GLOBAL['MATCH_COMPLETE_MESSAGE']),
               backgroundColor: Colors.red,
             ),
           );
@@ -196,14 +195,6 @@ class _SummaryScreenState extends State<SummaryScreen>
                           },
                         )
                       : const SizedBox.shrink(),
-                  /*originModel == model
-                  ? IconButton(
-                      icon: const Icon(Icons.archive),
-                      onPressed: () {
-                        goToArchive();
-                      },
-                    )
-                  : const SizedBox.shrink(),*/
                   IconButton(
                     icon: const Icon(Icons.preview_sharp),
                     onPressed: () {
@@ -222,10 +213,10 @@ class _SummaryScreenState extends State<SummaryScreen>
                             child: Column(
                               children: [
                                 Text(
-                                  "Result: ${model!.gameSummary}",
+                                  "Result: ${model.gameSummary}",
                                   style: const TextStyle(fontSize: 11),
                                 ),
-                                Text(model!.gameResult,
+                                Text(model.gameResult,
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(color: Colors.red))
                               ],
@@ -235,10 +226,10 @@ class _SummaryScreenState extends State<SummaryScreen>
                         child: SafeArea(
                       child: TabBarView(
                         children: [
-                          SummaryPage(model!.team1, true),
-                          SummaryPage(model!.team2, false),
-                          SummaryPage(model!.team2, true),
-                          SummaryPage(model!.team1, false)
+                          SummaryPage(model.team1, true),
+                          SummaryPage(model.team2, false),
+                          SummaryPage(model.team2, true),
+                          SummaryPage(model.team1, false)
                         ],
                       ),
                     ))

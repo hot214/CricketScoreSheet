@@ -58,18 +58,6 @@ class _BattingScreenState extends State<BattingScreen> {
 
   final _scoreController = TextEditingController(text: '');
 
-  // Create a list of players.
-  List<Player> players = List.generate(
-    11,
-    (index) => Player(
-      name: 'Player ${index + 1}',
-      rValue: 0,
-      bValue: 0,
-    ),
-  );
-
-  List<ScoreState> history = [];
-
   _BattingScreenState(BattingScreenController? _controller) {
     _controller!.reset = reset;
   }
@@ -96,9 +84,9 @@ class _BattingScreenState extends State<BattingScreen> {
     GameModel model = Provider.of<GameModel>(context, listen: false);
     var state = model.add(isWideChecked, isNoBallChecked, isOut, score);
     if (state == AddStateType.batmanLimitBall) {
-      displaySnackbar("Batsman has reached maximum balls");
+      displaySnackbar(GLOBAL['BATMAN_REACH_MAX']);
     } else if (state == AddStateType.bolwerLimitBall) {
-      displaySnackbar("Bowler has reached maximum balls");
+      displaySnackbar(GLOBAL['BOWLER_REACH_MAX']);
     } else if (state == AddStateType.success) {
       displaySnackbar("${model.lastGameState} has been added");
     }
@@ -106,8 +94,7 @@ class _BattingScreenState extends State<BattingScreen> {
       model.nextInning();
       if (model.inning == 2) {
         // The 1st innings has ended. The innings history has now been archived
-        displaySnackbar(
-            "The 1st innings has ended!\nThe innings history has now been archived");
+        displaySnackbar(GLOBAL['1ST_INNING_FINISH_MESSAGE']);
       } else {
         alertDialog(context, '', 'The match has ended!\n${model.gameResult}',
             cancellable: false, onSubmit: () {
@@ -290,7 +277,7 @@ class _BattingScreenState extends State<BattingScreen> {
                               : null,
                           child: Text(
                               batmanList[index].ball == model.limitBall
-                                  ? "${batmanList[index].name}"
+                                  ? batmanList[index].name
                                   : batmanList[index].name,
                               style: batmanList[index].ball == model.limitBall
                                   ? disabledStyle
@@ -564,29 +551,4 @@ class _BattingScreenState extends State<BattingScreen> {
       ),
     );
   }
-}
-
-class Player {
-  String name;
-  int rValue;
-  int bValue;
-
-  Player({required this.name, required this.rValue, required this.bValue});
-}
-
-class ScoreState {
-  bool isWideChecked = false;
-  bool isNoBallChecked = false;
-  bool isOut = false;
-  int score = 0;
-  int penalty = 0;
-  int selectedPlayer = 0;
-
-  ScoreState(
-      {this.selectedPlayer = 0,
-      this.isWideChecked = false,
-      this.isNoBallChecked = false,
-      this.isOut = false,
-      this.score = 0,
-      this.penalty = 0});
 }
