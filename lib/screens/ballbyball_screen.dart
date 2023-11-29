@@ -73,12 +73,6 @@ class _BallByBallScreenState extends State<BallByBallScreen>
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text('Ball by Ball'),
-            /*actions: <Widget>[
-              ElevatedButton(
-                onPressed: startOver,
-                child: const Text('Start Over'),
-              )
-            ],*/
           ),
           body: Padding(
               padding: const EdgeInsets.all(8),
